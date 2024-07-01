@@ -1,43 +1,55 @@
 import { useEffect, useState } from "react";
 
 import { MdSkipNext } from "react-icons/md";
+import { IoPauseCircle, IoPlayCircle } from "react-icons/io5";
 
 import { FastAverageColor } from "fast-average-color";
 
 import ProgressBar from "@components/ProgressBar.tsx";
 
 import usePlayer from "@stores/player.tsx";
-import { AvailableUsers, TrackInfo } from "@backend/types.ts";
-import { IoPauseCircle, IoPlayCircle } from "react-icons/io5";
 
-const dummyData: AvailableUsers = {
-    timestamp: 0,
-    code: 200,
-    message: "",
-    onlineUsers: [
-        {
-            "username": "Magix",
-            "userId": "85b7e6b8-6ac3-4009-ac50-98f4ad578940",
-            "avatar": "https://cdn.discordapp.com/avatars/252090676068614145/6a6959288e5bd9fe4a27a29fb112843b.png",
-            "socialStatus": "Everyone",
-            "listeningTo": {
-                "id": "0JuI1v1eIuM",
-                "title": "Celebration (feat. Toko Miura)",
-                "artist": "RADWIMPS",
-                "icon": "https://app.seikimo.moe/proxy/oesPpZgxatxCd9XA3Kbz0ZrvB9tR7tPIWha3mMfsQAWMC5X9n3HGtZzeDOHkz7KZSf5asi-8q8KGArkC=w544-h544-l90-rj?from=cart",
-                "url": "https://youtu.be/0JuI1v1eIuM",
-                "duration": 275
-            },
-            "progress": 7.71E-4
-        }
-    ]
-};
+import { random } from "@app/utils.ts";
+import Laudiolin from "@backend/api/laudiolin.ts";
+import { TrackInfo } from "@backend/types.ts";
+
+import data from "@cfg/data.json";
+
+/**
+ * Returns a random track from the backup playlists.
+ */
+async function randomTrack(): Promise<TrackInfo> {
+    const playlist = random(data.backupPlaylists);
+    const tracks = await Laudiolin.getPlaylistTracks(playlist);
+
+    return random(tracks);
+}
+
+/**
+ * Fetches the current track to play.
+ */
+async function fetchCurrent(): Promise<TrackInfo> {
+    const { onlineUsers } = await Laudiolin.getOnlineUsers();
+
+    // Try to find the target user.
+    const target = onlineUsers.find((user) => user.userId == data.userId);
+
+    if (!target) {
+        // Load an assortment of playlist tracks & pick a random one.
+        return await randomTrack();
+    } else {
+        // Load the user's current track.
+        return target.listeningTo;
+    }
+}
 
 /**
  * Responsible for changing the player volume.
  */
 function changeVolume(delta: number): void {
-    console.log(delta);
+    Howler.volume(
+        Howler.volume() + (-delta / 100)
+    );
 }
 
 /**
@@ -46,6 +58,9 @@ function changeVolume(delta: number): void {
  */
 function MusicPlayer() {
     const player = usePlayer();
+
+    const [skipped, setSkipped] = useState(false);
+    const [paused, setPaused] = useState(false);
 
     const [interacted, setInteracted] = useState(false);
 
@@ -59,7 +74,8 @@ function MusicPlayer() {
             setColor(undefined); // Clear it so we hide the previous color.
 
             const fac = new FastAverageColor();
-            const { rgb } = await fac.getColorAsync(self.icon);
+            const { rgb } = await fac.getColorAsync(
+                Laudiolin.iconUrl(self.icon));
             setColor(rgb.substring(4, rgb.length - 1));
         })();
     }, [self]);
@@ -67,13 +83,12 @@ function MusicPlayer() {
     useEffect(() => {
         // Play the new track.
         if (self && interacted) {
-            player.play(self);
+            player.play(self, interacted);
         }
-    }, [self, interacted]);
+    }, [interacted]);
 
     useEffect(() => {
-        // TODO: Find data from the backend.
-        setSelf(dummyData.onlineUsers[0].listeningTo);
+        (async () => setSelf(await fetchCurrent()))();
 
         const play = () => setInteracted(true);
         window.addEventListener("click", play);
@@ -81,6 +96,26 @@ function MusicPlayer() {
         return () => {
             window.removeEventListener("click", play);
         };
+    }, []);
+
+    useEffect(() => {
+        const int = setInterval(() => {
+            if (paused || !player.paused()) return;
+
+            ((async () => {
+                const next = await fetchCurrent();
+                if (next.id != self?.id) {
+                    player.play(next, interacted);
+                    setSelf(player.currentlyPlaying);
+                }
+            }))();
+        }, 120e3);
+
+        return () => clearInterval(int);
+    }, []);
+
+    useEffect(() => {
+        return () => player.stop();
     }, []);
 
     return self && color ? (
@@ -93,7 +128,7 @@ function MusicPlayer() {
             style={{ backgroundColor: `rgba(${color}, 0.5)` }}
         >
             <img
-                src={self.icon}
+                src={Laudiolin.iconUrl(self.icon)}
                 alt={self.title}
                 draggable={false}
                 className={"rounded-lg w-20 h-20"}
@@ -115,18 +150,34 @@ function MusicPlayer() {
             <div className={"flex flex-row items-end gap-1"}>
                 <MdSkipNext
                     className={"logo_button"}
-                    onClick={() => console.log("skip to next")}
+                    onClick={async () => {
+                        const next = await fetchCurrent();
+                        if (skipped || (next.id == self?.id ?? next.id)) {
+                            player.play(await randomTrack(), interacted);
+                        } else {
+                            player.play(next, interacted);
+                        }
+                        setSelf(player.currentlyPlaying);
+
+                        setSkipped(true);
+                    }}
                 />
 
                 { player.paused() ?
                     <IoPlayCircle
                         className={"logo_button"}
-                        onClick={() => player.resume()}
+                        onClick={() => {
+                            player.resume();
+                            setPaused(false);
+                        }}
                     />
                     :
                     <IoPauseCircle
                         className={"logo_button"}
-                        onClick={() => player.pause()}
+                        onClick={() => {
+                            player.pause();
+                            setPaused(true);
+                        }}
                     />
                 }
             </div>

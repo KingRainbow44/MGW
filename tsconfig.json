@@ -33,7 +33,8 @@
       "@stores/*": ["src/backend/stores/*"],
       "@hooks/*": ["src/hooks/*"],
       "@pages/*": ["src/ui/pages/*"],
-      "@widgets/*": ["src/ui/widgets/*"]
+      "@widgets/*": ["src/ui/widgets/*"],
+      "@cfg/*": ["cfg/*"]
     }
   },
   "include": ["src"],

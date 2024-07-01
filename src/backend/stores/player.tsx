@@ -4,6 +4,8 @@ import { Howl } from "howler";
 import Laudiolin from "@backend/api/laudiolin.ts";
 import type { TrackInfo } from "@backend/types.ts";
 
+Howler.volume(0.05);
+
 setInterval(() => {
     const state = usePlayer.getState();
     if (!state.handle) return;
@@ -21,10 +23,11 @@ export type PlayerStore = {
     paused: () => boolean;
     duration: () => number | undefined;
 
+    stop: () => void;
     pause: () => void;
     resume: () => void;
     seek: (time: number) => void;
-    play: (track: TrackInfo) => void;
+    play: (track: TrackInfo, autoPlay: boolean) => void;
 };
 const usePlayer = create<PlayerStore>()(() => ({
     handle: undefined,
@@ -40,6 +43,9 @@ const usePlayer = create<PlayerStore>()(() => ({
         return this.handle?.duration();
     },
 
+    stop(): void {
+        this.handle?.stop();
+    },
     pause(): void {
         this.handle?.pause();
     },
@@ -49,7 +55,7 @@ const usePlayer = create<PlayerStore>()(() => ({
     seek(time: number): void {
         this.handle?.seek(time);
     },
-    play(track: TrackInfo): void {
+    play(track: TrackInfo, autoPlay: boolean): void {
         if (this.handle) {
             this.handle.stop();
         }
@@ -57,8 +63,9 @@ const usePlayer = create<PlayerStore>()(() => ({
         this.currentlyPlaying = track;
         this.handle = new Howl({
             src: [Laudiolin.getTrackUrl(track)],
-            volume: 0.05,
-            html5: true
+            volume: 1,
+            html5: true,
+            autoplay: autoPlay
         });
 
         this.handle.play();

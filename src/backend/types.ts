@@ -26,4 +26,8 @@ export type AvailableUsers = LaudiolinResponse & {
     }[];
 };
 
+export type PlaylistData = LaudiolinResponse & {
+    tracks: TrackInfo[];
+};
+
 /// </editor-fold>

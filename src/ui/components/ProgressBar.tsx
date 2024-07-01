@@ -29,8 +29,6 @@ function Duration({ time }: { time: string }) {
 }
 
 interface IProps {
-    forceUpdate?: boolean;
-
     progress: number; // This is the current progress in seconds.
     duration: number; // This is the total duration in seconds.
 
@@ -45,8 +43,11 @@ function ProgressBar(props: IProps) {
 
     return (
         <div
-            className={"flex flex-row items-center gap-5"}
-            onMouseEnter={() => setThumbActive(true)}
+            className={"flex flex-row items-center gap-5 min-w-64"}
+            onMouseEnter={() => {
+                setThumbActive(true);
+                setProgress(props.progress);
+            }}
             onMouseLeave={() => setThumbActive(false)}
         >
             <Duration time={formatDuration(progress)} />
@@ -54,7 +55,7 @@ function ProgressBar(props: IProps) {
             <Slider
                 draggableTrack
                 min={0} max={duration == 0 ? 1 : duration}
-                value={props.forceUpdate ? progress : localProgress}
+                value={thumbActive ? localProgress : progress}
                 onChange={(value) => setProgress(value as number)}
                 onChangeComplete={(value) => props.onUpdate(value as number)}
                 styles={{
