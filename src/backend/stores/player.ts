@@ -57,6 +57,7 @@ const usePlayer = create<PlayerStore>()(() => ({
     },
     play(track: TrackInfo, autoPlay: boolean): void {
         if (this.handle) {
+            this.handle.unload();
             this.handle.stop();
         }
 

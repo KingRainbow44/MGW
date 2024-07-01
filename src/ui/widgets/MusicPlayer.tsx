@@ -7,7 +7,7 @@ import { FastAverageColor } from "fast-average-color";
 
 import ProgressBar from "@components/ProgressBar.tsx";
 
-import usePlayer from "@stores/player.tsx";
+import usePlayer from "@stores/player.ts";
 
 import { random } from "@app/utils.ts";
 import Laudiolin from "@backend/api/laudiolin.ts";
@@ -112,7 +112,7 @@ function MusicPlayer() {
         }, 120e3);
 
         return () => clearInterval(int);
-    }, []);
+    }, [self]);
 
     useEffect(() => {
         return () => player.stop();
