@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply m-0 overflow-hidden;
+}
+
+.App {
+    @apply w-full h-screen;
+}
+
+/// <editor-fold desc="Components">
+
+.logo_button {
+    @apply text-white text-3xl self-end;
+    @apply hover:cursor-pointer;
+    @apply active:scale-90;
+
+    transition: all 0.1s;
+}
+
+/// </editor-fold>
