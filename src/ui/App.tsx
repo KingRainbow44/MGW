@@ -1,7 +1,9 @@
 import { Route, Routes } from "react-router-dom";
 
 import HomePage from "@pages/HomePage.tsx";
-import MusicPlayer from "@ui/widgets/MusicPlayer.tsx";
+
+import Notification from "@widgets/Notification.tsx";
+import MusicPlayer from "@widgets/MusicPlayer.tsx";
 
 import "rc-slider/assets/index.css";
 
@@ -16,6 +18,7 @@ function App() {
             </Routes>
 
             <MusicPlayer />
+            <Notification />
         </div>
     );
 }
