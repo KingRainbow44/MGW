@@ -152,7 +152,7 @@ function MusicPlayer() {
                     className={"logo_button"}
                     onClick={async () => {
                         const next = await fetchCurrent();
-                        if (skipped || (next.id == self?.id ?? next.id)) {
+                        if (skipped || next.id == (self?.id ?? next.id)) {
                             player.play(await randomTrack(), interacted);
                         } else {
                             player.play(next, interacted);
