@@ -11,7 +11,12 @@ function Notification() {
             className={"alert p-2.5 bg-accent rounded-xl drop-shadow-lg absolute text-white right-5 top-5"}
             style={{ transform: `scale(${alert == undefined ? 0 : 1})` }}
         >
-            <span style={{ fontFamily: "mhy" }}>{alert ?? prevAlert}</span>
+            <span
+                className={"shadow-dark text-shadow-lg"}
+                style={{ fontFamily: "mhy" }}
+            >
+                {alert ?? prevAlert}
+            </span>
         </div>
     );
 }
