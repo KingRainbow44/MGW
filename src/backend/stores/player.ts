@@ -29,47 +29,35 @@ export type PlayerStore = {
     seek: (time: number) => void;
     play: (track: TrackInfo, autoPlay: boolean) => void;
 };
-const usePlayer = create<PlayerStore>()(() => ({
+const usePlayer = create<PlayerStore>()((set, get) => ({
     handle: undefined,
 
     currentlyPlaying: undefined,
     progress: 0,
     volume: 1,
 
-    paused(): boolean {
-        return !this.handle?.playing();
-    },
-    duration(): number | undefined {
-        return this.handle?.duration();
-    },
+    paused: () => !get().handle?.playing(),
+    duration: () => get().handle?.duration(),
 
-    stop(): void {
-        this.handle?.stop();
-    },
-    pause(): void {
-        this.handle?.pause();
-    },
-    resume(): void {
-        this.handle?.play();
-    },
-    seek(time: number): void {
-        this.handle?.seek(time);
-    },
-    play(track: TrackInfo, autoPlay: boolean): void {
-        if (this.handle) {
-            this.handle.unload();
-            this.handle.stop();
-        }
+    stop: () => get().handle?.stop(),
+    pause: () => get().handle?.pause(),
+    resume: () => get().handle?.play(),
+    seek: (time: number) => get().handle?.seek(time),
+    play: (track: TrackInfo, autoPlay: boolean) => {
+        Howler.unload();
 
-        this.currentlyPlaying = track;
-        this.handle = new Howl({
+        const handle = new Howl({
             src: [Laudiolin.getTrackUrl(track)],
             volume: 1,
             html5: true,
             autoplay: autoPlay
         });
+        handle.once("play", () => {
+            set({ progress: 0 });
+        });
+        handle.play();
 
-        this.handle.play();
+        set({ handle, currentlyPlaying: track });
     }
 }));
 

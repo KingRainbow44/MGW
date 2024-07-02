@@ -106,7 +106,7 @@ function MusicPlayer() {
                 const next = await fetchCurrent();
                 if (next.id != self?.id) {
                     player.play(next, interacted);
-                    setSelf(player.currentlyPlaying);
+                    setSelf(next);
                 }
             }))();
         }, 120e3);
