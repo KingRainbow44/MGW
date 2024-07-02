@@ -10,7 +10,7 @@ export const useAlert = create<string | undefined>()(() => undefined);
  * @param message The message to display.
  * @param duration The amount of milliseconds to display the message.
  */
-export default function alert(message: string, duration: number = 3e3): void {
+export default function alert(message: string, duration: number = 1e3): void {
     useAlert.setState(message);
 
     if (currentAlert) {

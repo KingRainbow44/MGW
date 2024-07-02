@@ -50,6 +50,8 @@ function changeVolume(delta: number): void {
     Howler.volume(
         Howler.volume() + (-delta / 100)
     );
+
+    alert(`Changed volume to ${Math.ceil(Howler.volume() * 100)}%`);
 }
 
 /**
