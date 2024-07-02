@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { MdSkipNext } from "react-icons/md";
+import { AnimatePresence, motion } from "framer-motion";
+
+import { VscClose } from "react-icons/vsc";
+import { MdMusicNote, MdSkipNext } from "react-icons/md";
 import { IoPauseCircle, IoPlayCircle } from "react-icons/io5";
 
 import { FastAverageColor } from "fast-average-color";
@@ -8,6 +11,7 @@ import { FastAverageColor } from "fast-average-color";
 import ProgressBar from "@components/ProgressBar.tsx";
 
 import usePlayer from "@stores/player.ts";
+import useSettings from "@stores/settings.tsx";
 
 import { random } from "@app/utils.ts";
 import Laudiolin from "@backend/api/laudiolin.ts";
@@ -60,6 +64,7 @@ function changeVolume(delta: number): void {
  */
 function MusicPlayer() {
     const player = usePlayer();
+    const settings = useSettings();
 
     const [skipped, setSkipped] = useState(false);
     const [paused, setPaused] = useState(false);
@@ -120,71 +125,112 @@ function MusicPlayer() {
         return () => player.stop();
     }, []);
 
-    return self && color ? (
-        <div
-            className={"absolute left-1/2 -translate-x-1/2 bottom-[5%] rounded-lg p-2" +
-                " flex flex-row gap-3 text-white border-2 border-white border-opacity-50" +
-                " overflow-x-clip min-w-[305px] items-center select-none"}
-            onContextMenu={(e) => e.preventDefault()}
-            onWheel={e => changeVolume(Math.sign(e.deltaY))}
-            style={{ backgroundColor: `rgba(${color}, 0.5)` }}
-        >
-            <img
-                src={Laudiolin.iconUrl(self.icon)}
-                alt={self.title}
-                draggable={false}
-                className={"rounded-lg w-20 h-20"}
-            />
+    return <>
+        <AnimatePresence>
+            { settings.showMusicPlayer && self && color && (
+                <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={"player absolute left-1/2 bottom-[2%] rounded-lg p-2" +
+                        " flex flex-row gap-3 text-white border-2 border-white border-opacity-50" +
+                        " overflow-x-clip min-w-[305px] items-center select-none"}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onWheel={e => changeVolume(Math.sign(e.deltaY))}
+                    style={{ backgroundColor: `rgba(${color}, 0.5)` }}
+                >
+                    <div className={"absolute top-0 right-0 p-1 text-transparent text-xl z-10 " +
+                        "transition-all rounded-tr-lg " +
+                        "hover:bg-dark hover:cursor-pointer hover:text-white"}
+                         onClick={() => settings.showMusicPlayer = false}
+                    >
+                        <VscClose />
+                    </div>
 
-            <div className={"flex flex-col justify-between"}>
-                <div className={"flex flex-col"}>
-                    <span className={"font-medium"}>{self.title}</span>
-                    <span>{self.artist}</span>
-                </div>
+                    <img
+                        src={Laudiolin.iconUrl(self.icon)}
+                        alt={self.title}
+                        draggable={false}
+                        className={"rounded-lg w-20 h-20"}
+                    />
 
-                <ProgressBar
-                    progress={player.progress}
-                    duration={player.duration() ?? self.duration}
-                    onUpdate={(to) => player.seek(to)}
-                />
-            </div>
+                    <div className={"flex flex-col justify-between"}>
+                        <div className={"flex flex-col"}>
+                            <span className={"font-medium"}>{self.title}</span>
+                            <span>{self.artist}</span>
+                        </div>
 
-            <div className={"h-20 flex flex-row items-end gap-1"}>
-                <MdSkipNext
-                    className={"logo_button"}
-                    onClick={async () => {
-                        const next = await fetchCurrent();
-                        if (skipped || next.id == (self?.id ?? next.id)) {
-                            player.play(await randomTrack(), interacted);
-                        } else {
-                            player.play(next, interacted);
+                        <ProgressBar
+                            progress={player.progress}
+                            duration={player.duration() ?? self.duration}
+                            onUpdate={(to) => player.seek(to)}
+                        />
+                    </div>
+
+                    <div className={"h-20 flex flex-row items-end gap-1"}>
+                        <MdSkipNext
+                            className={"logo_button"}
+                            onClick={async () => {
+                                const next = await fetchCurrent();
+                                if (skipped || next.id == (self?.id ?? next.id)) {
+                                    player.play(await randomTrack(), interacted);
+                                } else {
+                                    player.play(next, interacted);
+                                }
+                                setSelf(player.currentlyPlaying);
+
+                                setSkipped(true);
+                            }}
+                        />
+
+                        { player.paused() ?
+                            <IoPlayCircle
+                                className={"logo_button"}
+                                onClick={() => {
+                                    player.resume();
+                                    setPaused(false);
+                                }}
+                            />
+                            :
+                            <IoPauseCircle
+                                className={"logo_button"}
+                                onClick={() => {
+                                    player.pause();
+                                    setPaused(true);
+                                }}
+                            />
                         }
-                        setSelf(player.currentlyPlaying);
+                    </div>
+                </motion.div>
+            ) }
+        </AnimatePresence>
 
-                        setSkipped(true);
-                    }}
-                />
+        <MusicPlayerToggle />
+    </>;
+}
 
-                { player.paused() ?
-                    <IoPlayCircle
-                        className={"logo_button"}
-                        onClick={() => {
-                            player.resume();
-                            setPaused(false);
-                        }}
-                    />
-                    :
-                    <IoPauseCircle
-                        className={"logo_button"}
-                        onClick={() => {
-                            player.pause();
-                            setPaused(true);
-                        }}
-                    />
-                }
-            </div>
-        </div>
-    ) : undefined;
+function MusicPlayerToggle() {
+    const settings = useSettings();
+
+    return (
+        <AnimatePresence>
+            { !settings.showMusicPlayer && (
+                <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={"absolute left-1/2 -translate-x-1/2 bottom-[2%] " +
+                        "p-3 rounded-full bg-accent drop-shadow-lg " +
+                        "hover:cursor-pointer"}
+                    onClick={() => settings.showMusicPlayer = true}
+                >
+                    <MdMusicNote className={"text-white text-2xl"} />
+                </motion.div>
+            ) }
+        </AnimatePresence>
+    );
 }
 
 export default MusicPlayer;

@@ -7,6 +7,7 @@ export default {
         extend: {
             colors: {
                 blue: "#067BC2",
+                dark: "#00000060",
 
                 // Palette colors.
                 primary: "#ffffff",
