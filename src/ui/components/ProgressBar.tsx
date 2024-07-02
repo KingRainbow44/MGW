@@ -43,7 +43,7 @@ function ProgressBar(props: IProps) {
 
     return (
         <div
-            className={"flex flex-row items-center gap-5 min-w-64"}
+            className={"flex flex-row items-center gap-5 min-w-48 w-full"}
             onMouseEnter={() => {
                 setThumbActive(true);
                 setProgress(props.progress);

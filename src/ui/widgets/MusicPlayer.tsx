@@ -122,7 +122,7 @@ function MusicPlayer() {
         <div
             className={"absolute left-1/2 -translate-x-1/2 bottom-[5%] rounded-lg p-2" +
                 " flex flex-row gap-3 text-white border-2 border-white border-opacity-50" +
-                " select-none"}
+                " overflow-x-clip min-w-[305px] items-center select-none"}
             onContextMenu={(e) => e.preventDefault()}
             onWheel={e => changeVolume(Math.sign(e.deltaY))}
             style={{ backgroundColor: `rgba(${color}, 0.5)` }}
@@ -147,7 +147,7 @@ function MusicPlayer() {
                 />
             </div>
 
-            <div className={"flex flex-row items-end gap-1"}>
+            <div className={"h-20 flex flex-row items-end gap-1"}>
                 <MdSkipNext
                     className={"logo_button"}
                     onClick={async () => {
